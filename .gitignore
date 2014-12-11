@@ -55,3 +55,6 @@ target/
 
 #vi
 *.swp
+
+# figures
+*.png
