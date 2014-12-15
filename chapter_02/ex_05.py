@@ -4,7 +4,7 @@ from scipy.misc import comb
 from scipy.stats import uniform, beta
 from scipy.integrate import trapz
 
-N_THROWS = 50
+N_THROWS = 10
 NPTS = 100
 
 k_vals = np.arange(N_THROWS+1)
@@ -20,7 +20,7 @@ def Pr_y_is_k(k, theta):
 
 # prior for theta
 #theta_prior = uniform(0, 1)
-theta_prior = beta(1, 8)
+theta_prior = beta(1, 2)
 theta = np.linspace(theta_prior.ppf(0), theta_prior.ppf(1), NPTS)
 
 Pr_y = np.empty(N_THROWS+1, dtype=float)
@@ -56,5 +56,25 @@ plt.xlabel('k')
 plt.ylabel('Pr(y=k)')
 plt.legend()
 
+#plt.show()
+plt.close()
+
+
+
+Pr_theta = np.empty(N_THROWS+1, dtype=object)
+for k in xrange(N_THROWS+1):
+    Pr_y[k] = Pr_y_is_k(k, theta)
+    Pr_theta[k] = theta_prior.pdf(theta) * Pr_y_is_k_given_theta(k, theta) *\
+                  (N_THROWS+1)
+    print trapz(Pr_theta[k], theta)
+
+fig, axes = plt.subplots(1, 2)
+plt.sca(axes[0])
+for k in xrange(N_THROWS+1):
+    plt.plot(theta, Pr_theta[k])
+plt.xlabel('theta')
+plt.ylabel('P(theta|k)')
 plt.show()
 plt.close()
+
+
