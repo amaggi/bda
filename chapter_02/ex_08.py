@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 from scipy.integrate import trapz, cumtrapz
 from scipy.interpolate import interp1d
+from am_bda import get_pdf_quantiles
 
 N = 100
 S_Y = 20
@@ -37,20 +38,8 @@ for i in xrange(NPTS):
     th = theta[i]
     Pr_theta_given_data[i] = likelihood(y_samples, th)*theta_prior.pdf(th)/ev
 
-def get_quantiles(pdf, x, q_list):
-    # need the cumulative probability density function
-    # to get the quantiles
-    Pr_cum = cumtrapz(pdf, x=x, initial=0)
-    quant = interp1d(Pr_cum, x)
-    x_out = quant(q_list)
-    
-    # also get the probability at the quantile poitns
-    pr = interp1d(x, pdf)
-    pr_out = pr(x_out)
 
-    return x_out, pr_out
-
-th_quant, pr_th_quant = get_quantiles(Pr_theta_given_data, theta, [0.025, 0.5, 0.975])
+th_quant, pr_th_quant = get_pdf_quantiles(Pr_theta_given_data, theta, [0.025, 0.5, 0.975])
 
 # get the posterior predictive function for y
 post_y = np.empty(NPTS, dtype=float)
@@ -61,7 +50,7 @@ for iy in xrange(NPTS):
                          Pr_theta_given_data[ith]
     post_y[iy] = trapz(integrand, theta)
         
-y_quant, pr_y_quant = get_quantiles(post_y, y_range, [0.025, 0.5, 0.975])
+y_quant, pr_y_quant = get_pdf_quantiles(post_y, y_range, [0.025, 0.5, 0.975])
 
 fig, axes = plt.subplots(1, 2)
 plt.sca(axes[0])
