@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.misc import comb
-from scipy.stats import uniform
+from scipy.stats import uniform, beta
 from scipy.integrate import trapz
 
 N_THROWS = 50
@@ -18,10 +18,10 @@ def Pr_y_is_k(k, theta):
     y = Pr_y_is_k_given_theta(k, theta)
     return trapz(y, theta)
 
-# uniform prior for theta
-theta_prior = uniform(0, 1)
+# prior for theta
+#theta_prior = uniform(0, 1)
+theta_prior = beta(1, 8)
 theta = np.linspace(theta_prior.ppf(0), theta_prior.ppf(1), NPTS)
-#theta = np.linspace(0, 1, NPTS)
 
 Pr_y = np.empty(N_THROWS+1, dtype=float)
 for k in xrange(N_THROWS+1):
