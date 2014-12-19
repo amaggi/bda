@@ -10,14 +10,14 @@ from sample_via_cdf import sample_via_cdf
 # the dishwasher with prob pc breaks four or five out of 5 dishes in a week.
 
 NPTS = 100
-NSAMP = 1000
+NSAMP = 10000
 
 # assign a uniform prior to both pc and p0
 prior_p0 = uniform(0, 1)
 prior_pc = uniform(0, 1)
 
-p0 = np.linspace(prior_p0.ppf(0.01), prior_p0.ppf(0.99), NPTS)
-pc = np.linspace(prior_pc.ppf(0.01), prior_pc.ppf(0.99), NPTS)
+p0 = np.linspace(prior_p0.ppf(0), prior_p0.ppf(1), NPTS)
+pc = np.linspace(prior_pc.ppf(0), prior_pc.ppf(1), NPTS)
 
 p0_samp = prior_p0.rvs(NSAMP)
 pc_samp = prior_pc.rvs(NSAMP)
@@ -34,26 +34,34 @@ for i in xrange(NSAMP):
 
 # get un-normalized posterior marginal for pc
 marg_pc = np.empty(NPTS, dtype=float)
-marg_p0 = np.empty(NPTS, dtype=float)
 dpc = pc[1]-pc[0]
-dp0 = p0[1]-p0[0]
 for i in xrange(NPTS):
     marg_pc[i] = np.sum(post_p0_pc[:][np.abs(pc_samp[:]-pc[i]) < 2*dpc])
-    marg_p0[i] = np.sum(post_p0_pc[:][np.abs(p0_samp[:]-p0[i]) < 2*dp0])
 
-# take samples from the posterior
+# take samples from the marginal
 marg_pc_samp = sample_via_cdf(pc, marg_pc, NSAMP)
-marg_p0_samp = sample_via_cdf(p0, marg_p0, NSAMP)
+
+# for each sample of pc, get p(p0|pc) then sample to get p0
+marg_p0_samp = np.empty(NSAMP, dtype=float)
+for i in xrange(NSAMP):
+    indexes = [np.abs(pc_samp[:]-marg_pc_samp[i]) < 2*dpc]
+    p0_ = p0_samp[indexes]
+    pp0_ = post_p0_pc[indexes]
+    indexes_sorted = p0_.argsort()
+    p0_ = p0_[indexes_sorted]
+    pp0_ = pp0_[indexes_sorted]
+    marg_p0_samp[i] = sample_via_cdf(p0_, pp0_, 1)
+
 dif = marg_pc_samp - marg_p0_samp
 dif2 = marg_pc_samp - 2*marg_p0_samp
-dif5 = marg_pc_samp - 5*marg_p0_samp
+dif4 = marg_pc_samp - 4*marg_p0_samp
 
-print 'Prob pc > p0 = ', np.sum([dif >0]) / float(NSAMP) * 100, '%'
-print 'Prob pc > 2p0 = ', np.sum([dif2 >0]) / float(NSAMP) * 100, '%'
-print 'Prob pc > 5p0 = ', np.sum([dif5 >0]) / float(NSAMP) * 100, '%'
+print('Prob(pc > p0) = %.2f %%' % (np.sum([dif >0]) / float(NSAMP) * 100))
+print('Prob(pc > 2p0) = %.2f %%' % (np.sum([dif2 >0]) / float(NSAMP) * 100))
+print('Prob(pc > 4p0) = %.2f %%' % (np.sum([dif4 >0]) / float(NSAMP) * 100))
 
-fig, axes = plt.subplots(1, 3)
-plt.sca(axes[0])
+fig, axes = plt.subplots(2, 2)
+plt.sca(axes[0, 0])
 plt.scatter(p0_samp, pc_samp, c=post_p0_pc)
 plt.xlim([p0.min(), p0.max()])
 plt.ylim([pc.min(), pc.max()])
@@ -61,13 +69,21 @@ plt.xlabel('p0')
 plt.ylabel('pc')
 plt.title('Posterior P(p0,pc)')
 
-plt.sca(axes[1])
+plt.sca(axes[0, 1])
+plt.scatter(marg_p0_samp, marg_pc_samp)
+plt.xlim([p0.min(), p0.max()])
+plt.ylim([pc.min(), pc.max()])
+plt.xlabel('p0')
+plt.ylabel('pc')
+plt.title('Samples drawn from P(p0,pc)')
+
+plt.sca(axes[1, 0])
 plt.hist(marg_p0_samp, label='p0')
 plt.hist(marg_pc_samp, label='pc')
 plt.xlabel('Beakage probability')
 plt.legend()
 
-plt.sca(axes[2])
+plt.sca(axes[1, 1])
 plt.hist(dif, label='pc-p0')
 plt.xlabel('pc-p0')
 plt.legend()
