@@ -52,9 +52,9 @@ for i in xrange(n_vals):
 plt.sca(axes[1])
 n_vals = len(b_vals)
 for i in xrange(n_vals):
-    rv = beta(1, b_vals[i])
+    rv = beta(4, b_vals[i])
     x = np.linspace(rv.ppf(0.001), rv.ppf(0.999), NPTS)
-    plt.title('Beta, a = 1')
+    plt.title('Beta, a = 4')
     plt.plot(x, rv.pdf(x), color=COLS[i], label='b=%.1f'%b_vals[i])
     plt.legend()
 
