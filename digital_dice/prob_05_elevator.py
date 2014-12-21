@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import uniform, beta
 from scipy.stats import gaussian_kde
+from pickle import dump
 
 NIT_DATA = 10000
 NIT_BAYES = 20
-N_FLOORS = 9
+N_FLOORS = 7
 NPTS = 100
 EPS = 1e-5
 
@@ -47,6 +48,11 @@ fl = np.arange(N_FLOORS+1)
 dmax = np.max([fl, N_FLOORS-fl], 0)
 d0 = np.min([fl, N_FLOORS-fl], 0)
 print dmax, d0
+
+# save the iteration data to disk
+f_ = open('prob_05_elevator.dat', 'w')
+dump((dist, dmax, d0), f_)
+f_.close()
 
 # the probability model
 def prob_dist(th0, d0, dmax, dist):

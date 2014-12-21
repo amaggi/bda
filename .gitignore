@@ -58,3 +58,6 @@ target/
 
 # figures
 *.png
+
+# data files
+*.dat
